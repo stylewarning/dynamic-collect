@@ -1,17 +1,10 @@
                                 NOTES
 
 This software is really in alpha stage. I don't think the API is
-perfect yet, neither are the semantics. For example, there are some
-warnings if we try to nest the constructs.
+perfect yet, neither are the semantics.
 
-Another major issue is the lack of composition. We cannot really
-compose several collectors because we only have one COLLECT function,
-which can't differentiate between the different
-WITH-DYNAMIC-COLLECTION forms. I am not sure if this is a desirable or
-necessary feature, though.
-
-Finally, I am not sure if a bare COLLECT form should error, saying
-that it is not a part of a WITH-DYNAMIC-COLLECTION form, or if it
-should just return NIL. Erroring out is useful in order to determine
+Also, I am not sure if a bare COLLECT form should error, saying that
+it is not a part of a WITH-DYNAMIC-COLLECTION form, or if it should
+just return NIL. Erroring out is useful in order to determine
 accidental usage, but returning NIL is useful if we don't necessarily
-want to always be collecting.
+want to always be collecting. Right now it is configurable.

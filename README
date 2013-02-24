@@ -1,5 +1,5 @@
                            DYNAMIC-COLLECT
-                           ---------------
+                           ===============
 
                            By Robert Smith
 
@@ -16,7 +16,9 @@ This code was originally created for tasks in code analysis, where
 warnings and errors were collected during the analysis, and then
 processed a posteriori.
 
-Let's go through an example.
+
+                               EXAMPLE
+                               -------
 
 First, we will define a function which intends to do some kind of
 analysis of data, and warn if it's not the right type. In this case,
@@ -57,7 +59,7 @@ WITH-DYNAMIC-COLLECTION, and do the passes on our data. We will log
 when a pass completes to the user.
 
 (defun main (data)
-  (let ((messages (with-dynamic-collection
+  (let ((messages (with-dynamic-collection ()
                     (pass-1 data)
                     (format t ";;; Done with pass 1.~%")
                     (force-output)
@@ -113,3 +115,41 @@ pass; our collection aborted early.
 Despite this very contrived example, early termination is very
 useful. For example, if we are analyzing a file that ends up being
 unable to be parsed, we can collect an error message, and fail early.
+
+
+                         ENSURING CORRECTNESS
+                         --------------------
+
+Using the variable *ENSURE-HANDLED-COLLECT*, we can error if the
+system detects that a COLLECT is used without a properly enclosing
+WITH-DYNAMIC-COLLECTION.
+
+By default, *ENSURE-HANDLED-COLLECT* is NIL, which means that
+unhandled COLLECT forms will just return their RETURN keyword
+parameter value.
+
+
+                    COMPOSING DYNAMIC COLLECTIONS
+                    -----------------------------
+
+WITH-DYNAMIC-COLLECTION is actually composable via the notion of
+tags. A "tag" is an EQL-comparable thing (often a keyword) that lets
+one match up a WITH-DYNAMIC-COLLECTION with a COLLECT form. We simply
+provide tags to each, and collection will be matched up
+accordingly. For example:
+
+CL-USER> (format t "OUTER: ~S~%"
+                 (with-dynamic-collection (:tag :outer)
+                   (collect 1 :tag :outer)
+                   (format t "INNER: ~S~%"
+                           (with-dynamic-collection (:tag :inner)
+                             (collect 2 :tag :outer)
+                             (collect 3 :tag :inner)))))
+
+will print
+
+INNER: (3)
+OUTER: (1 2)
+
+as expected. By default, the tags are NIL (an EQL-comparable value),
+which is sufficient when there's no composition.
