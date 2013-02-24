@@ -52,7 +52,9 @@ we will just print them out in a friendly fashion.
 (defun process-messages (messages)
   (if (null messages)
       (format t "No messages.~%")
-      (format t "~R message~:P:~%~{  >> ~A~%~}" (length messages) messages)))
+      (format t "~@(~R~) message~:P:~%~{  >> ~A~%~}"
+                (length messages)
+                messages)))
 
 Finally, we have our main entry point to our analysis. We use
 WITH-DYNAMIC-COLLECTION, and do the passes on our data. We will log
@@ -83,7 +85,7 @@ the analysis on something that warns on the first pass.
 CL-USER> (main :quux)
 ;;; Done with pass 1.
 ;;; Done with pass 2.
-one message:
+One message:
   >> Warning: Not an integer: :QUUX
 NIL
 
@@ -94,7 +96,7 @@ warns on the first, again.
 CL-USER> (main '(hello))
 ;;; Done with pass 1.
 ;;; Done with pass 2.
-one message:
+One message:
   >> Warning: Not an integer: (HELLO)
 NIL
 
@@ -103,7 +105,7 @@ both.
 
 CL-USER> (main '(5 hello))
 ;;; Done with pass 1.
-two messages:
+Two messages:
   >> Warning: Not an integer: (5 HELLO)
   >> Error: A function call needs a symbol in the first position, given: 5
 NIL
