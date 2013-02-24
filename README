@@ -71,7 +71,7 @@ when a pass completes to the user.
     (process-messages messages)))
 
 Now for some test runs. First, we provide completely "legitimate" data
-(according to our passes.
+(according to our passes).
 
 CL-USER> (main 5)
 ;;; Done with pass 1.
