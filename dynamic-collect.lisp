@@ -24,6 +24,7 @@
    (id        :initarg :id
               :reader messenger-id
               :type symbol)
+   
    ;; The TAG is used to match up the messenger from a COLLECT to the
    ;; right WITH-DYNAMIC-COLLECTION form.
    (tag       :initarg :tag
