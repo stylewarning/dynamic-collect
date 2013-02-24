@@ -1,0 +1,115 @@
+                           DYNAMIC-COLLECT
+                           ---------------
+
+                           By Robert Smith
+
+DYNAMIC-COLLECT is a library for dynamic, continuable, and abortable
+collection of data.
+
+This code is useful for times when data needs to be collected at
+various points in a program, but it is inconvenient to modify the
+program and create new pipelines for passing data around. It is also
+useful when such pipelines would take away from the intent of the
+program.
+
+This code was originally created for tasks in code analysis, where
+warnings and errors were collected during the analysis, and then
+processed a posteriori.
+
+Let's go through an example.
+
+First, we will define a function which intends to do some kind of
+analysis of data, and warn if it's not the right type. In this case,
+we will check that it's an integer. If it's not, we'll warn that we
+wanted an integer. Actually, we will collect a message that represents
+the warning.
+
+(defun pass-1 (data)
+  (unless (integerp data)
+    (collect (format nil "Warning: Not an integer: ~S" data))))
+
+Next, we will do a more stringent analysis. If the data is a non-null
+list, then we will require that the first element of the list needs to
+be a symbol. Perhaps this represents a function call. If the data
+indeed doesn't look like a function call, then we will collect an
+error, and specify that collection (and further analysis) must not
+continue, so we pass NIL to CONTINUEP.
+
+(defun pass-2 (data)
+  (when (and (listp data)
+             (plusp (length data)))
+    (unless (symbolp (car data))
+      (collect (format nil "Error: A function call needs a symbol ~
+                            in the first position, given: ~S"
+                       (car data))
+               :continuep nil))))
+
+Now a simple function to process our collected messages. In this case,
+we will just print them out in a friendly fashion.
+
+(defun process-messages (messages)
+  (if (null messages)
+      (format t "No messages.~%")
+      (format t "~R message~:P:~%~{  >> ~A~%~}" (length messages) messages)))
+
+Finally, we have our main entry point to our analysis. We use
+WITH-DYNAMIC-COLLECTION, and do the passes on our data. We will log
+when a pass completes to the user.
+
+(defun main (data)
+  (let ((messages (with-dynamic-collection
+                    (pass-1 data)
+                    (format t ";;; Done with pass 1.~%")
+                    (force-output)
+                    (pass-2 data)
+                    (format t ";;; Done with pass 2.~%")
+                    (force-output))))
+    (process-messages messages)))
+
+Now for some test runs. First, we provide completely "legitimate" data
+(according to our passes.
+
+CL-USER> (main 5)
+;;; Done with pass 1.
+;;; Done with pass 2.
+No messages.
+NIL
+
+As seen, the passes complete, and we have no messages. Now let's do
+the analysis on something that warns on the first pass.
+
+CL-USER> (main :quux)
+;;; Done with pass 1.
+;;; Done with pass 2.
+one message:
+  >> Warning: Not an integer: :QUUX
+NIL
+
+As seen, both passes complete, but we ended up with a warning we
+collected. Now let's do something that passes the second analysis, but
+warns on the first, again.
+
+CL-USER> (main '(hello))
+;;; Done with pass 1.
+;;; Done with pass 2.
+one message:
+  >> Warning: Not an integer: (HELLO)
+NIL
+
+Same thing. Finally, let's do something that will cause issues with
+both.
+
+CL-USER> (main '(5 hello))
+;;; Done with pass 1.
+two messages:
+  >> Warning: Not an integer: (5 HELLO)
+  >> Error: A function call needs a symbol in the first position, given: 5
+NIL
+
+Note this time that both warnings were collected and displayed. But
+more importantly, note that we never reached the end of the second
+pass; our collection aborted early.
+
+Despite this very contrived example, early termination is very
+useful. For example, if we are analyzing a file that ends up being
+unable to be parsed, we can collect an error message, and fail early.
