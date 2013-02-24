@@ -41,12 +41,11 @@
                           (continuep t)
                           tag)
   "Collect the data DATA in a WITH-DYNAMIC-COLLECTION
-environment.
-
-Return the value RETURN from the form.
+environment. Return the value RETURN from the form in the event the
+function is returned from.
 
 If CONTINUEP is null, then collecting will cease and the
-WITH-DYNAMIC-COLLECTION form will return.
+matching WITH-DYNAMIC-COLLECTION form will return.
 
 The TAG denotes at which WITH-DYNAMIC-COLLECTION form the DATA will be
 accumulated."
