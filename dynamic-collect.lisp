@@ -92,8 +92,7 @@ have the same tag will be accrued."
                            (when (eql ,tag-once (messenger-tag m))
                              (push (messenger-payload m) ,messages)
                              (if (messenger-continuep m)
-                                 (let ((r (find-restart 'continue m)))
-                                   (invoke-restart r))
+                                 (invoke-restart (find-restart 'continue m))
                                  (return-from ,block-name
                                    (nreverse ,messages)))))))
            ,@body)
