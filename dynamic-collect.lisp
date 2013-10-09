@@ -51,16 +51,16 @@ matching WITH-DYNAMIC-COLLECTION form will return.
 The TAG denotes at which WITH-DYNAMIC-COLLECTION form the DATA will be
 accumulated."
   (let ((id (gensym "ID-")))
-    (restart-case (if *ensure-handled-collect*
-                      (error 'messenger :payload data
-                                        :continuep continuep
-                                        :id id
-                                        :tag tag)
-                      (or (signal 'messenger :payload data
-                                             :continuep continuep
-                                             :id id
-                                             :tag tag)
-                          return))
+    (restart-case (let ((messenger (make-condition 'messenger
+                                                   :payload data
+                                                   :continuep continuep
+                                                   :id id
+                                                   :tag tag)))
+                    
+                    (if *ensure-handled-collect*
+                        (error messenger)
+                        (or (signal messenger)
+                            return)))
       (continue ()
         :report (lambda (stream)
                   (format stream
